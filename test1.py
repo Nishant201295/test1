@@ -1,21 +1,19 @@
+import streamlit as st
 import subprocess
-import sys
 
 # Install dependencies
 def install_dependencies():
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "streamlit", "beautifulsoup4", "requests"])
+    subprocess.run(["pip", "install", "beautifulsoup4", "requests"])
 
-# Check if Streamlit is installed
+# Check if dependencies are installed, if not, install them
 try:
-    import streamlit
+    import requests
+    from bs4 import BeautifulSoup
 except ImportError:
-    print("Streamlit is not installed. Installing...")
+    st.write("Installing dependencies...")
     install_dependencies()
-
-# Import required libraries
-import streamlit as st
-import requests
-from bs4 import BeautifulSoup
+    import requests
+    from bs4 import BeautifulSoup
 
 def get_option_chain(symbol):
     url = f"https://www.nseindia.com/live_market/dynaContent/live_watch/option_chain/optionKeys.jsp?symbol={symbol}"
