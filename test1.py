@@ -1,45 +1,27 @@
 import streamlit as st
 import subprocess
 
-# Run installation script
-st.write("Installing nselib...")
-subprocess.run(["python", "install_nselib.py"])
+def install_packages(packages):
+    for package in packages:
+        st.write(f"Installing {package}...")
+        subprocess.run(["pip", "install", package])
+        st.write(f"Successfully installed {package}")
 
-# Importing necessary functions
-from nselib import capital_market, derivatives
+def main():
+    st.title("Package Installer")
 
-# Define functions to fetch data
-def get_equity_data(symbol, from_date, to_date):
-    return capital_market.price_volume_and_deliverable_position_data(symbol=symbol, from_date=from_date, to_date=to_date)
+    packages = [
+        "pandas>=2.0.0",
+        "requests>=2.31.0",
+        "xlrd>=2.0.1"
+    ]
 
-def get_derivative_data(symbol, instrument, from_date, to_date):
-    return derivatives.future_price_volume_data(symbol=symbol, instrument=instrument, from_date=from_date, to_date=to_date)
+    st.write("This app installs the following packages:")
+    for package in packages:
+        st.write(f"- {package}")
 
-# Streamlit app
-st.title('NSE Data App')
+    if st.button("Install Packages"):
+        install_packages(packages)
 
-st.sidebar.header('Choose Data Type')
-data_type = st.sidebar.selectbox('Select Data Type', ['Equity', 'Derivative'])
-
-if data_type == 'Equity':
-    st.sidebar.subheader('Equity Data')
-    symbol = st.sidebar.text_input('Enter Symbol (e.g., SBIN):')
-    from_date = st.sidebar.text_input('Enter From Date (DD-MM-YYYY):')
-    to_date = st.sidebar.text_input('Enter To Date (DD-MM-YYYY):')
-
-    if st.sidebar.button('Get Equity Data'):
-        equity_data = get_equity_data(symbol, from_date, to_date)
-        st.write('### Equity Data')
-        st.write(equity_data)
-
-elif data_type == 'Derivative':
-    st.sidebar.subheader('Derivative Data')
-    symbol = st.sidebar.text_input('Enter Symbol (e.g., SBIN):')
-    instrument = st.sidebar.selectbox('Select Instrument Type', ['FUTSTK', 'FUTIDX', 'OPTSTK', 'OPTIDX'])
-    from_date = st.sidebar.text_input('Enter From Date (DD-MM-YYYY):')
-    to_date = st.sidebar.text_input('Enter To Date (DD-MM-YYYY):')
-
-    if st.sidebar.button('Get Derivative Data'):
-        derivative_data = get_derivative_data(symbol, instrument, from_date, to_date)
-        st.write('### Derivative Data')
-        st.write(derivative_data)
+if __name__ == "__main__":
+    main()
