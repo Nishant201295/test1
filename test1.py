@@ -13,7 +13,8 @@ def main():
     packages = [
         "pandas>=2.0.0",
         "requests>=2.31.0",
-        "xlrd>=2.0.1"
+        "xlrd>=2.0.1",
+        "nselib"
     ]
 
     st.write("This app installs the following packages:")
