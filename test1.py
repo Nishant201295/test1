@@ -1,10 +1,15 @@
 import streamlit as st
 import subprocess
+import importlib.util
 
 def install_package(package):
     st.write(f"Installing {package}...")
     subprocess.run(["pip", "install", package])
     st.write(f"Successfully installed {package}")
+
+def is_package_installed(package_name):
+    spec = importlib.util.find_spec(package_name)
+    return spec is not None
 
 def main():
     st.title("NSElib Package Installer and Data Retrieval")
@@ -18,7 +23,7 @@ def main():
 
     # Step 2: Retrieve option chain data and other functionalities
     if st.button("Begin Step 2"):
-        if "nselib" in st.sys.modules:
+        if is_package_installed("nselib"):
             from nselib import capital_market, derivatives
 
             st.header("Step 2: Retrieve Option Chain Data and Other Functionalities")
