@@ -1,11 +1,22 @@
 import streamlit as st
+import subprocess
 
-# Try to import nselib module
+# Check if nselib module is installed
 try:
     import nselib
 except ImportError:
-    st.error("Error: Unable to import nselib module. Please make sure it's installed correctly.")
-    st.stop()
+    st.warning("nselib module not found. Installing...")
+    
+    # Install nselib using pip
+    subprocess.run(["pip", "install", "nselib"])
+
+    # Check if installation was successful
+    try:
+        import nselib
+        st.success("nselib module installed successfully.")
+    except ImportError:
+        st.error("Error: Unable to install nselib module. Please install it manually.")
+        st.stop()
 
 # Check if nselib.derivatives module is available
 if hasattr(nselib, 'derivatives'):
