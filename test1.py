@@ -1,78 +1,35 @@
 import streamlit as st
 import subprocess
-from nselib import capital_market, derivatives
 
-def install_packages(packages):
-    for package in packages:
-        st.write(f"Installing {package}...")
-        subprocess.run(["pip", "install", package])
-        st.write(f"Successfully installed {package}")
+def install_package(package):
+    st.write(f"Installing {package}...")
+    subprocess.run(["pip", "install", package])
+    st.write(f"Successfully installed {package}")
 
 def main():
     st.title("NSElib Package Installer and Data Retrieval")
 
-    prerequisite_package = "nselib"
+    # Step 1: Install nselib package
+    st.header("Step 1: Install nselib Package")
+    if st.button("Install nselib Package"):
+        install_package("nselib")
+        st.success("nselib package installed successfully!")
 
-    st.write(f"This app installs {prerequisite_package} package and provides options for data retrieval.")
+    # Step 2: Retrieve option chain data and other functionalities
+    st.header("Step 2: Retrieve Option Chain Data and Other Functionalities")
+    if "nselib" in st.sys.modules:
+        from nselib import capital_market, derivatives
 
-    if st.button("Install Package"):
-        install_packages([prerequisite_package])
+        data_section = st.sidebar.selectbox("Select Data Section", ("Capital Market", "Derivative"))
 
-    if st.checkbox("Retrieve Trading Holiday Calendar"):
-        trading_holidays = nselib.trading_holiday_calendar()
-        st.write("Trading Holiday Calendar:")
-        st.write(trading_holidays)
-
-    data_section = st.sidebar.selectbox("Select Data Section", ("Capital Market", "Derivative"))
-
-    if data_section == "Capital Market":
-        capital_market_option = st.sidebar.selectbox("Select Data Type", ("Price, Volume, and Deliverable Position Data",
-                                                                         "Price Volume Data",
-                                                                         "Deliverable Position Data",
-                                                                         "Bulk Deal Data",
-                                                                         "Block Deals Data",
-                                                                         "Short Selling Data",
-                                                                         "Bhav Copy with Delivery",
-                                                                         "Bhav Copy Equities",
-                                                                         "Equity List",
-                                                                         "F&O Equity List",
-                                                                         "Nifty50 Equity List",
-                                                                         "India VIX Data",
-                                                                         "Index Data",
-                                                                         "Market Watch All Indices",
-                                                                         "FII/DII Trading Activity"))
-
-        if st.sidebar.button("Get Data"):
-            if capital_market_option == "Price, Volume, and Deliverable Position Data":
-                symbol = st.text_input("Enter Symbol:")
-                from_date = st.text_input("Enter From Date (DD-MM-YYYY):")
-                to_date = st.text_input("Enter To Date (DD-MM-YYYY):")
-                data = capital_market.price_volume_and_deliverable_position_data(symbol=symbol, from_date=from_date, to_date=to_date)
-                st.write("Price, Volume, and Deliverable Position Data:")
-                st.write(data)
-            # Add other options and corresponding data retrieval logic
-
-    elif data_section == "Derivative":
-        derivative_option = st.sidebar.selectbox("Select Data Type", ("Future Price Volume Data",
-                                                                      "Option Price Volume Data",
-                                                                      "F&O Bhav Copy",
-                                                                      "Participant-wise Open Interest",
-                                                                      "Participant-wise Trading Volume",
-                                                                      "Expiry Dates Future",
-                                                                      "Expiry Dates Option Index",
-                                                                      "NSE Live Option Chain",
-                                                                      "FII Derivatives Statistics"))
-
-        if st.sidebar.button("Get Data"):
-            if derivative_option == "Future Price Volume Data":
-                symbol = st.text_input("Enter Symbol:")
-                instrument = st.text_input("Enter Instrument (FUTSTK or FUTIDX):")
-                from_date = st.text_input("Enter From Date (DD-MM-YYYY):")
-                to_date = st.text_input("Enter To Date (DD-MM-YYYY):")
-                data = derivatives.future_price_volume_data(symbol=symbol, instrument=instrument, from_date=from_date, to_date=to_date)
-                st.write("Future Price Volume Data:")
-                st.write(data)
-            # Add other options and corresponding data retrieval logic
+        if data_section == "Capital Market":
+            # Code for Capital Market data retrieval
+            pass
+        elif data_section == "Derivative":
+            # Code for Derivative data retrieval
+            pass
+    else:
+        st.warning("Please install the nselib package first.")
 
 if __name__ == "__main__":
     main()
