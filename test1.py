@@ -63,10 +63,15 @@ class Nse:
 
         self.str_current_time = current_time.split(" ")[1]
         try:
-            current_date = datetime.datetime.strptime(current_time.split(" ")[0], '%Y-%m-%d').date()
-            current_time = datetime.datetime.strptime(current_time.split(" ")[1], '%H:%M:%S').time()
-        except ValueError:
-            st.error("Error: Failed to parse current time.")
+            date_part, time_part = current_time.split(" ")
+            st.write("Date Part:", date_part)
+            st.write("Time Part:", time_part)
+            current_date = datetime.datetime.strptime(date_part, '%Y-%m-%d').date()
+            st.write("Parsed Date:", current_date)
+            current_time = datetime.datetime.strptime(time_part, '%H:%M:%S').time()
+            st.write("Parsed Time:", current_time)
+        except ValueError as e:
+            st.error(f"Error: Failed to parse current time. {e}")
             return
 
         if self.first_run:
