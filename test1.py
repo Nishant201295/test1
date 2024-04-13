@@ -68,7 +68,7 @@ class Nse:
             st.write("Time Part:", time_part)
             current_date = datetime.datetime.strptime(date_part, '%Y-%m-%d').date()
             st.write("Parsed Date:", current_date)
-            current_time = datetime.datetime.strptime(time_part, '%H:%M:%S').time()
+            current_time = datetime.datetime.strptime(time_part.split('.')[0], '%H:%M:%S').time()
             st.write("Parsed Time:", current_time)
         except ValueError as e:
             st.error(f"Error: Failed to parse current time. {e}")
