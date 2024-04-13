@@ -1,4 +1,10 @@
 import streamlit as st
+
+# Installing nselib
+st.write("Installing nselib...")
+!pip install nselib
+
+# Importing necessary functions
 from nselib import capital_market, derivatives
 
 # Define functions to fetch data
