@@ -1,29 +1,38 @@
 import streamlit as st
-import requests
+from nselib import capital_market, derivatives
 
-def get_option_chain(cookie):
-    url = 'https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY'
-    headers = {'Cookie': cookie}
-    
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise an error for bad status codes
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        st.error(f"Error retrieving option chain: {e}")
-        return None
+# Define functions to fetch data
+def get_equity_data(symbol, from_date, to_date):
+    return capital_market.price_volume_and_deliverable_position_data(symbol=symbol, from_date=from_date, to_date=to_date)
 
-def main():
-    st.title('Nifty Option Chain Extractor')
-    
-    # Get user's cookie input
-    cookie = st.text_input('Enter your cookie:', type='password')
-    
-    # Retrieve and display option chain
-    if st.button('Get Option Chain') and cookie:
-        option_chain = get_option_chain(cookie)
-        if option_chain:
-            st.write(option_chain)
+def get_derivative_data(symbol, instrument, from_date, to_date):
+    return derivatives.future_price_volume_data(symbol=symbol, instrument=instrument, from_date=from_date, to_date=to_date)
 
-if __name__ == '__main__':
-    main()
+# Streamlit app
+st.title('NSE Data App')
+
+st.sidebar.header('Choose Data Type')
+data_type = st.sidebar.selectbox('Select Data Type', ['Equity', 'Derivative'])
+
+if data_type == 'Equity':
+    st.sidebar.subheader('Equity Data')
+    symbol = st.sidebar.text_input('Enter Symbol (e.g., SBIN):')
+    from_date = st.sidebar.text_input('Enter From Date (DD-MM-YYYY):')
+    to_date = st.sidebar.text_input('Enter To Date (DD-MM-YYYY):')
+
+    if st.sidebar.button('Get Equity Data'):
+        equity_data = get_equity_data(symbol, from_date, to_date)
+        st.write('### Equity Data')
+        st.write(equity_data)
+
+elif data_type == 'Derivative':
+    st.sidebar.subheader('Derivative Data')
+    symbol = st.sidebar.text_input('Enter Symbol (e.g., SBIN):')
+    instrument = st.sidebar.selectbox('Select Instrument Type', ['FUTSTK', 'FUTIDX', 'OPTSTK', 'OPTIDX'])
+    from_date = st.sidebar.text_input('Enter From Date (DD-MM-YYYY):')
+    to_date = st.sidebar.text_input('Enter To Date (DD-MM-YYYY):')
+
+    if st.sidebar.button('Get Derivative Data'):
+        derivative_data = get_derivative_data(symbol, instrument, from_date, to_date)
+        st.write('### Derivative Data')
+        st.write(derivative_data)
