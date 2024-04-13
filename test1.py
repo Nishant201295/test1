@@ -2,29 +2,28 @@ import streamlit as st
 import requests
 
 def get_option_chain(cookie):
-    headers = {
-        'Cookie': cookie,
-    }
     url = 'https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY'
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
+    headers = {'Cookie': cookie}
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # Raise an error for bad status codes
         return response.json()
-    else:
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error retrieving option chain: {e}")
         return None
 
 def main():
     st.title('Nifty Option Chain Extractor')
-    cookie = st.text_input('Enter your cookie:', type='password')
-    nifty_option_chain = None
     
+    # Get user's cookie input
+    cookie = st.text_input('Enter your cookie:', type='password')
+    
+    # Retrieve and display option chain
     if st.button('Get Option Chain') and cookie:
-        nifty_option_chain = get_option_chain(cookie)
-        
-    if nifty_option_chain:
-        st.write(nifty_option_chain)
-    elif st.button('Show Example'):
-        st.write("Example option chain will appear here.")
-        # You can add an example of the option chain here.
+        option_chain = get_option_chain(cookie)
+        if option_chain:
+            st.write(option_chain)
 
 if __name__ == '__main__':
     main()
