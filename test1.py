@@ -1,25 +1,32 @@
+import streamlit as st
 import subprocess
 import sys
-import streamlit as st
+import os
 
-# Function to install nselib using pip
 def install_nselib():
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "nselib"])
+    st.write("Installing nselib...")
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "nselib"])
+        st.write("nselib installed successfully!")
+    except subprocess.CalledProcessError:
+        st.error("Error installing nselib. Please check your internet connection and try again.")
+        sys.exit(1)
 
-# Check if nselib is already installed
-try:
-    import nselib
-except ImportError:
-    st.write("nselib not found. Installing...")
-    install_nselib()
-    import nselib
+def main():
+    st.title("Install nselib and Code Editor")
 
-st.title('NSE Data Fetcher')
+    if st.button("Install nselib"):
+        install_nselib()
 
-# Sidebar for selecting data type
-data_type = st.sidebar.selectbox(
-    'Select Data Type',
-    ('Trading Holiday Calendar', 'Capital Market', 'Derivatives')
-)
+    if os.path.exists("nselib"):
+        st.write("nselib is installed.")
+        st.code("import nselib")
 
-# Rest of the code remains the same as the previous example...
+        # Provide a code editor
+        st.subheader("Code Editor")
+        code = st.text_area("Enter your code here", "# Write your code here")
+        st.write("You entered:")
+        st.code(code, language="python")
+
+if __name__ == "__main__":
+    main()
