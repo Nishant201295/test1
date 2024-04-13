@@ -1,223 +1,36 @@
 import streamlit as st
-import pandas as pd
-import datetime
+import requests
 
-class Nse:
-    def __init__(self):
-        self.stop = False
-        self.first_run = True
-        self.seconds = 60
-        self.time_difference_factor = 10
-        self.warn_late_update = True
-        self.save_oc = False
-        self.update = False
-        self.auto_stop = False
-        self.notifications = True
-        self.round_factor = 1
-        self.sp = 0
-        self.expiry_date = "2024-04-13"
-        self.icon_ico_path = ""
-        self.load_nse_icon = False
-        self.previous_date = None
-        self.previous_time = None
-        self.toaster = None
-        self.index = "NIFTY"
-        self.option_mode = "Index"
-        self.max_call_oi = 0
-        self.max_call_oi_sp = 0
-        self.max_put_oi = 0
-        self.max_put_oi_sp = 0
-        self.max_call_oi_2 = 0
-        self.max_call_oi_sp_2 = 0
-        self.max_put_oi_2 = 0
-        self.max_put_oi_sp_2 = 0
-        self.put_call_ratio = 0
-        self.call_sum = 0
-        self.put_sum = 0
-        self.difference = 0
-        self.call_boundary = 0
-        self.put_boundary = 0
-        self.call_itm = 0
-        self.put_itm = 0
-        self.str_current_time = ""
-        self.points = 0
-
-    def set_values(self):
-        st.write("Setting values...")  # Placeholder for setting values
-
-    def get_dataframe(self):
-        # Placeholder for getting data from dataframe
-        return pd.DataFrame(), str(datetime.datetime.now()), 0
-
-    def check_for_updates(self):
-        # Placeholder for checking updates
-        st.write("Checking for updates...")
-
-    def main(self):
-        if self.stop:
-            return
-
-        entire_oc, current_time, self.points = self.get_dataframe()
-
-        self.str_current_time = current_time.split(" ")[1]
-        try:
-            current_date = datetime.datetime.strptime(current_time.split(" ")[0], '%Y-%m-%d').date()
-            current_time = datetime.datetime.strptime(current_time.split(" ")[1], '%H:%M:%S').time()
-        except ValueError:
-            st.error("Error: Failed to parse current time.")
-            return
-
-        if self.first_run:
-            self.previous_date = current_date
-            self.previous_time = current_time
-        elif current_date > self.previous_date:
-            self.previous_date = current_date
-            self.previous_time = current_time
-        elif current_date == self.previous_date:
-            if current_time > self.previous_time:
-                time_difference = 0
-                if current_time.hour > self.previous_time.hour:
-                    time_difference = (60 - self.previous_time.minute) + current_time.minute + \
-                                      ((60 - self.previous_time.second) + current_time.second) / 60
-                elif current_time.hour == self.previous_time.hour:
-                    time_difference = current_time.minute - self.previous_time.minute + \
-                                      (current_time.second - self.previous_time.second) / 60
-                if time_difference >= self.time_difference_factor and self.warn_late_update:
-                    st.warning(f"The data from the server was last updated about {int(time_difference)} minutes ago.")
-                self.previous_time = current_time
-            else:
-                return
-
-        call_oi_list = []
-        for i in range(len(entire_oc)):
-            int_call_oi = int(entire_oc.iloc[i, [0]][0])
-            call_oi_list.append(int_call_oi)
-        call_oi_index = call_oi_list.index(max(call_oi_list))
-        self.max_call_oi = round(max(call_oi_list) / self.round_factor, 1)
-        self.max_call_oi_sp = float(entire_oc.iloc[call_oi_index]['Strike Price'])
-
-        put_oi_list = []
-        for i in range(len(entire_oc)):
-            int_put_oi = int(entire_oc.iloc[i, [20]][0])
-            put_oi_list.append(int_put_oi)
-        put_oi_index = put_oi_list.index(max(put_oi_list))
-        self.max_put_oi = round(max(put_oi_list) / self.round_factor, 1)
-        self.max_put_oi_sp = float(entire_oc.iloc[put_oi_index]['Strike Price'])
-
-        sp_range_list = []
-        for i in range(put_oi_index, call_oi_index + 1):
-            sp_range_list.append(float(entire_oc.iloc[i]['Strike Price']))
-
-        self.max_call_oi_2 = self.max_call_oi
-        self.max_call_oi_sp_2 = self.max_call_oi_sp
-        self.max_put_oi_2 = self.max_put_oi
-        self.max_put_oi_sp_2 = self.max_put_oi_sp
-        if len(sp_range_list) == 2:
-            self.max_call_oi_2 = round((entire_oc[entire_oc['Strike Price'] == self.max_put_oi_sp].iloc[0, 0]) /
-                                       self.round_factor, 1)
-            self.max_call_oi_sp_2 = self.max_put_oi_sp
-            self.max_put_oi_2 = round((entire_oc[entire_oc['Strike Price'] == self.max_call_oi_sp].iloc[0, 20]) /
-                                      self.round_factor, 1)
-            self.max_put_oi_sp_2 = self.max_call_oi_sp
-        else:
-            call_oi_list_2 = []
-            for i in range(put_oi_index, call_oi_index):
-                int_call_oi_2 = int(entire_oc.iloc[i, [0]][0])
-                call_oi_list_2.append(int_call_oi_2)
-            call_oi_index_2 = put_oi_index + call_oi_list_2.index(max(call_oi_list_2))
-            self.max_call_oi_2 = round(max(call_oi_list_2) / self.round_factor, 1)
-            self.max_call_oi_sp_2 = float(entire_oc.iloc[call_oi_index_2]['Strike Price'])
-
-            put_oi_list_2 = []
-            for i in range(put_oi_index + 1, call_oi_index + 1):
-                int_put_oi_2 = int(entire_oc.iloc[i, [20]][0])
-                put_oi_list_2.append(int_put_oi_2)
-            put_oi_index_2 = put_oi_index + 1 + put_oi_list_2.index(max(put_oi_list_2))
-            self.max_put_oi_2 = round(max(put_oi_list_2) / self.round_factor, 1)
-            self.max_put_oi_sp_2 = float(entire_oc.iloc[put_oi_index_2]['Strike Price'])
-
-        total_call_oi = sum(call_oi_list)
-        total_put_oi = sum(put_oi_list)
-        self.put_call_ratio = round(total_put_oi / total_call_oi, 2)
-
-        try:
-            index = int(entire_oc[entire_oc['Strike Price'] == self.sp].index.tolist()[0])
-        except IndexError:
-            st.error("Incorrect Strike Price. Please enter correct Strike Price.")
-            return
-
-        a = entire_oc[['Change in Open Interest']][entire_oc['Strike Price'] == self.sp]
-        b1 = a.iloc[:, 0]
-        c1 = int(b1.get(index))
-        b2 = entire_oc.iloc[:, 1]
-        c2 = int(b2.get((index + 1), 'Change in Open Interest'))
-        b3 = entire_oc.iloc[:, 1]
-        c3 = int(b3.get((index + 2), 'Change in Open Interest'))
-        if isinstance(c2, str):
-            c2 = 0
-        if isinstance(c3, str):
-            c3 = 0
-        self.call_sum = round((c1 + c2 + c3) / self.round_factor, 1)
-        if self.call_sum == -0:
-            self.call_sum = 0.0
-        self.call_boundary = round(c3 / self.round_factor, 1)
-
-        o1 = a.iloc[:, 1]
-        p1 = int(o1.get(index))
-        o2 = entire_oc.iloc[:, 19]
-        p2 = int(o2.get((index + 1), 'Change in Open Interest'))
-        p3 = int(o2.get((index + 2), 'Change in Open Interest'))
-        if isinstance(p2, str):
-            p2 = 0
-        if isinstance(p3, str):
-            p3 = 0
-        self.put_sum = round((p1 + p2 + p3) / self.round_factor, 1)
-        self.put_boundary = round(p1 / self.round_factor, 1)
-        self.difference = round(self.call_sum - self.put_sum, 1)
-        if self.p5 == 0:
-            self.call_itm = 0.0
-        else:
-            self.call_itm = round(self.p4 / self.p5, 1)
-            if self.call_itm == -0:
-                self.call_itm = 0.0
-        if isinstance(self.p6, str):
-            self.p6 = 0
-        if isinstance(self.p7, str):
-            self.p7 = 0
-        if self.p7 == 0:
-            self.put_itm = 0.0
-        else:
-            self.put_itm = round(self.p6 / self.p7, 1)
-            if self.put_itm == -0:
-                self.put_itm = 0.0
-
-        self.set_values()
-
-        if self.save_oc:
-            try:
-                entire_oc.to_csv(
-                    f"NSE-OCA-{self.index if self.option_mode == 'Index' else self.stock}-{self.expiry_date}-Full.csv",
-                    index=False)
-            except PermissionError:
-                st.error("Failed to access NSE-OCA file due to permission denied.")
-            except Exception as e:
-                st.error(f"An error occurred while exporting data: {e}")
-
-        if self.first_run:
-            if self.update:
-                self.check_for_updates()
-            self.first_run = False
-        if self.str_current_time == '15:30:00' and not self.stop and self.auto_stop \
-                and self.previous_date == datetime.datetime.strptime(datetime.datetime.now().strftime("%Y-%m-%d"),
-                                                                     "%Y-%m-%d").date():
-            self.stop = True
-            st.warning("Retrieving new data has been stopped.")
-            return
-
+def get_option_chain(symbol, expiry_date):
+    url = f"https://www.nseindia.com/api/option-chain-indices?symbol={symbol}&expiryDate={expiry_date}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    }
+    # You can replace these cookies with your own. You may need to update them periodically.
+    cookies = {
+        'cookie1': 'defaultLang=en; _ga=GA1.1.759567813.1701852071; _ga_PJSKY6CFJH=GS1.1.1702017828.3.0.1702017828.60.0.0; _ga_QJZ4447QD3=GS1.1.1712835272.18.0.1712835272.0.0.0; nsit=4YYMxhmHdFlf8kUuez0B2NdM; AKA_A2=A; _abck=518DCC2692A9CDCFE5C7558C73CBA1F9~0~YAAQPJYRYPhPi8uOAQAA9hfD1gsphOfLOaozIhmwQ+UguvvK1mKbrqHIPlQGO+ohU3crv2M1LDxAZfeSsvKTQHxjT5hP1RYuWkPQbUQyghwDFh6BYCEB2CfvN7xt6NVzJK/ymzdqA4FNNvZa2ClqYn80oE7xr6DiniSCFpVUtKfelTR2+INv8F506BCYXoygb8RgSJ7vhKdDC+a0r9pRS7Jco6kFmyvQmo9ncBVJ9ubgfDt0D5A6HR3+a8dJu68ZW6SxY1otDBsJNk1Alz/K8BpBhnWFXpw5XBlmyg1KFuMQHrlwI68rxQ7Vk9qQhP2b+Np0kn2gpJPf0vNOmDd3YG6mdqX1Kqvyc7py8xPb5E116Fgudg0CBo83rkQxxMxe4/zNeQZQGYyHyeVQ4ue41cRd2WCYL0D7aQ==~-1~-1~-1; ak_bmsc=ABFFBC468CF283F1E507BF61D4D24D7B~000000000000000000000000000000~YAAQPJYRYJNQi8uOAQAAICPD1hd0ErRLlQtWORKibYNjFAYWVXLhwNNNJjjPEEwkuBfKGWOqmRlFj1pSdjeo0gp5C8oA9iN3JNYxrzZ8LlJItGlOCmHu7Z/FrGUiq3Bwx1g90d66wDFfgVNQ/BxNTR/aLcwrscVFKdkuGTNc+8VbVw46PHlZLmrkYfe5evIznBLVIi3O0yaTTop+OP0pnTPg4FDOxk1VRLPRI40g+b0CchMZuTrDvFw5cLwlRxw8Tsh5W9sIdCxl5h1bV7oNbeHkKhwR+ZYzsvcNEXWb4L8POtzCaNriJLzQKXZYNWKYg/oqz+ZkmUKlMvxO8Yq4kob17SJM0L7eYjI927PPKCuHTEaLnlXT8FeaurUJyH8NifE1QsrJChtBSNz/WkYRZHH7BbwS+iTbsdgmTmH6t1D6Rs89XGuG4pKdG6p5S8X1LKnkWs/KUVYm8ASzj1g=; nseappid=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhcGkubnNlIiwiYXVkIjoiYXBpLm5zZSIsImlhdCI6MTcxMzAwMDg2OCwiZXhwIjoxNzEzMDA4MDY4fQ.KfMfdUYlL1HA8dngdvZTqMVBGtMC37HWK27UcdpZK6A; bm_sz=D683A253030C380EDDAAE166EF1FED18~YAAQrwHVF+pAprqOAQAAnOzO1hf4DmXQutm5ijqFkj1o7KPHIkKI76LFn0hG34yCTDAA0xdBO4JcPKoZswGHPd7eZWarXgmWsfobE2MAzeB/gDOMXevhgV8/u9c0pipzVZW4/aHaqNoeMXArY2dPFXlySVzKJPE3wWpBz7PqcJqkKQprYN7+6TEoHi7syfzmzDk1iYj6Za8/NE55p531D+dpUNIWN56Jh5FfhPOw9mguZWKtwNsQCLlalnnj4wztclzVVD0/GPAaSE37sTNL8E3gUOytJc91QqxIyBKO7bJVQvxDxoLschK2XglQeQESPvuoyHB/TBMHp2gCblfq8YVYoWV08qYVPtHmeG/RF0la2STaUg4npiGEHJ6zr+UpLUO+oz5ZH69Q5/wsS9gJTznXPGpH/lQhJqdsE3Gk~3616816~4601650; _ga_87M7PJ3R97=GS1.1.1713000096.33.1.1713000871.0.0.0; bm_sv=2D4A6C2A9DF8C9DD981B9C0985F66713~YAAQrwHVFyDpprqOAQAAOjbY1hfCCbMgG5wgFPdCjgzJVuMe6/imXx5hcPaKHVemiD37QUbnRbLYeNTJ7aOhAzAelIdcdBOSMlXh3n4XvMS8geMiVBsdNO8lHu5JcVPTHBK3yj0PQ8eIDR81Ki+35Z1jUET6+I/JMwflxCeGLbgK5nk7n4t8GRPtrwhglI4qIc+45GEOzRyOUjt0Rzd7Cwi6O2gBwHevxffoOqoZSPAsbG202AN3HG+tYI/UeD+bs7iO~1; RT="sl=0&ss=luxwhlj4&tt=0&z=1&dm=nseindia.com&si=27dd24d2-ad9d-4caf-af2c-883121c5adf7&se=8c&bcn=%2F%2F684d0d42.akstat.io%2F&ul=dc8l"'
+    }
+    response = requests.get(url, headers=headers, cookies=cookies)
+    data = response.json()
+    return data['records']['data']
 
 def main():
-    nse = Nse()
-    nse.main()
+    st.title('NSE Option Chain Extractor for Nifty')
 
-if __name__ == '__main__':
+    # Select symbol
+    symbol = st.text_input('Enter Nifty symbol (e.g., NIFTY)', 'NIFTY')
+
+    # Select expiry date
+    expiry_date = st.text_input('Enter expiry date (e.g., 31MAR2022)', '31MAR2022')
+
+    # Fetch option chain
+    option_chain = get_option_chain(symbol, expiry_date)
+
+    if option_chain:
+        # Display option chain data
+        st.write(option_chain)
+    else:
+        st.write('Data not available')
+
+if __name__ == "__main__":
     main()
