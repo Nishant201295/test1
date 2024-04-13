@@ -1,8 +1,9 @@
 import streamlit as st
+import subprocess
 
-# Installing nselib
+# Run installation script
 st.write("Installing nselib...")
-!pip install nselib
+subprocess.run(["python", "install_nselib.py"])
 
 # Importing necessary functions
 from nselib import capital_market, derivatives
