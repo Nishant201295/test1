@@ -1,3 +1,18 @@
+import subprocess
+import sys
+
+# Install dependencies
+def install_dependencies():
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "streamlit", "beautifulsoup4", "requests"])
+
+# Check if Streamlit is installed
+try:
+    import streamlit
+except ImportError:
+    print("Streamlit is not installed. Installing...")
+    install_dependencies()
+
+# Import required libraries
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
